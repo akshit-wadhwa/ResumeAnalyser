@@ -1,0 +1,20 @@
+# Maven / Java
+target/
+*.class
+
+# IntelliJ / VS Code
+.idea/
+*.iml
+.vscode/
+
+# Logs
+*.log
+
+# Python
+ml-service/.venv/
+ml-service/__pycache__/
+*.pyc
+
+# OS
+.DS_Store
+Thumbs.db

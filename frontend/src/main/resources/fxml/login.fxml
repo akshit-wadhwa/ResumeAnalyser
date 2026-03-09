@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+
+<StackPane fx:controller="com.resumeanalyser.frontend.controller.LoginController"
+           xmlns:fx="http://javafx.com/fxml" fx:id="rootPane" styleClass="root">
+    <VBox alignment="CENTER" spacing="14" maxWidth="400" styleClass="card">
+        <Label text="Resume Analyzer" styleClass="title" />
+        <Label text="Sign in to continue" styleClass="subtitle" />
+        
+        <TextField fx:id="emailField" promptText="Email address" />
+        <PasswordField fx:id="passwordField" promptText="Password" />
+        
+        <Button text="Sign In" onAction="#onLogin" styleClass="primary" />
+        <Label fx:id="statusLabel" styleClass="status" />
+        
+        <HBox spacing="4" alignment="CENTER">
+            <Label text="Don't have an account?" styleClass="hint" />
+            <Button text="Register" onAction="#onGoToRegister" styleClass="secondary" style="-fx-padding: 2 8;"/>
+        </HBox>
+    </VBox>
+    <padding>
+        <Insets top="40" right="40" bottom="40" left="40" />
+    </padding>
+</StackPane>

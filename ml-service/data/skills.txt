@@ -1,0 +1,31 @@
+java
+spring
+spring boot
+microservices
+rest
+sql
+postgresql
+mysql
+jdbc
+hibernate
+maven
+gradle
+javafx
+pdfbox
+apache poi
+python
+machine learning
+nlp
+tf-idf
+fastapi
+flask
+aws
+docker
+kubernetes
+javascript
+react
+html
+css
+linux
+git
+ci/cd

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:controller="com.resumeanalyser.frontend.controller.ResultsController"
+            xmlns:fx="http://javafx.com/fxml" fx:id="rootPane" styleClass="root">
+    <top>
+        <VBox spacing="16" styleClass="panel" BorderPane.alignment="CENTER">
+            <HBox spacing="20" alignment="CENTER_LEFT">
+                <Label text="Analysis Results" styleClass="title" HBox.hgrow="ALWAYS" />
+                <Button text="← Back" onAction="#onBackToUpload" styleClass="secondary" />
+            </HBox>
+            
+            <HBox spacing="20" alignment="CENTER_LEFT">
+                <VBox spacing="6" styleClass="panel" style="-fx-border-color: #2563eb; -fx-border-width: 2; -fx-padding: 16;">
+                    <Label text="Match Score" styleClass="hint" />
+                    <Label fx:id="matchLabel" styleClass="metric" />
+                    <ProgressBar fx:id="matchProgress" prefWidth="150" prefHeight="8" />
+                </VBox>
+                
+                <VBox spacing="6" styleClass="panel" style="-fx-border-color: #f59e0b; -fx-border-width: 2; -fx-padding: 16;">
+                    <Label text="Confidence" styleClass="hint" />
+                    <Label fx:id="confidenceLabel" styleClass="metric" />
+                </VBox>
+                
+                <VBox spacing="6" styleClass="panel" style="-fx-border-color: #8b5cf6; -fx-border-width: 2; -fx-padding: 16;">
+                    <Label text="Seniority Level" styleClass="hint" />
+                    <Label fx:id="seniorityLabel" styleClass="metric" />
+                </VBox>
+            </HBox>
+        </VBox>
+    </top>
+    
+    <center>
+        <HBox spacing="16" BorderPane.alignment="CENTER">
+            <VBox spacing="14" styleClass="panel" HBox.hgrow="ALWAYS">
+                <Label text="✓ Matched Skills" styleClass="section-title" />
+                <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 6; -fx-min-height: 250; -fx-max-height: 250;">
+                    <VBox fx:id="matchedContainer" spacing="6" style="-fx-padding: 8; -fx-background-color: #f8fafc;">
+                        <!-- Skills will be added dynamically -->
+                    </VBox>
+                </ScrollPane>
+            </VBox>
+            
+            <VBox spacing="14" styleClass="panel" HBox.hgrow="ALWAYS">
+                <Label text="✗ Missing Skills" styleClass="section-title" />
+                <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 6; -fx-min-height: 250; -fx-max-height: 250;">
+                    <VBox fx:id="missingContainer" spacing="6" style="-fx-padding: 8; -fx-background-color: #f8fafc;">
+                        <!-- Skills will be added dynamically -->
+                    </VBox>
+                </ScrollPane>
+            </VBox>
+            
+            <VBox spacing="14" styleClass="panel" HBox.hgrow="ALWAYS">
+                <Label text="⚠ Areas to Improve" styleClass="section-title" />
+                <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 6; -fx-min-height: 250; -fx-max-height: 250;">
+                    <VBox fx:id="weaknessContainer" spacing="6" style="-fx-padding: 8; -fx-background-color: #f8fafc;">
+                        <!-- Weaknesses will be added dynamically -->
+                    </VBox>
+                </ScrollPane>
+            </VBox>
+            
+            <VBox spacing="14" styleClass="panel" HBox.hgrow="ALWAYS">
+                <Label text="💡 Recommendations" styleClass="section-title" />
+                <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 6; -fx-min-height: 250; -fx-max-height: 250;">
+                    <VBox fx:id="recommendationContainer" spacing="6" style="-fx-padding: 8; -fx-background-color: #f8fafc;">
+                        <!-- Recommendations will be added dynamically -->
+                    </VBox>
+                </ScrollPane>
+            </VBox>
+        </HBox>
+    </center>
+    
+    <bottom>
+        <HBox spacing="12" styleClass="panel" BorderPane.alignment="CENTER" style="-fx-padding: 16;">
+            <Button text="📥 Export PDF Report" onAction="#onExportReport" styleClass="primary" HBox.hgrow="ALWAYS" />
+            <Button text="⟲ New Analysis" onAction="#onBackToUpload" styleClass="accent" />
+        </HBox>
+    </bottom>
+    
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16" />
+    </padding>
+</BorderPane>

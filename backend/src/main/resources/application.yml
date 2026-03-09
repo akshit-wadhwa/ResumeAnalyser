@@ -1,0 +1,22 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/resume_analyser
+    username: postgres
+    password: Akshit@123
+    driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+ml:
+  endpoint: ${ML_ENDPOINT:http://localhost:8000/analyze}
+  connect-timeout-ms: 5000
+  read-timeout-ms: 60000
+
+app:
+  cache:
+    ttl-seconds: 900

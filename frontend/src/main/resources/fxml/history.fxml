@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:controller="com.resumeanalyser.frontend.controller.HistoryController"
+            xmlns:fx="http://javafx.com/fxml" fx:id="rootPane" styleClass="root">
+    <top>
+        <HBox spacing="20" styleClass="panel" BorderPane.alignment="CENTER" style="-fx-padding: 16 24;">
+            <Label text="Analysis History" styleClass="section-title" HBox.hgrow="ALWAYS" />
+            <Button text="← Back" onAction="#onBack" styleClass="secondary" />
+        </HBox>
+    </top>
+    <center>
+        <VBox spacing="16" styleClass="panel" BorderPane.alignment="CENTER">
+            <Label text="Your Previous Analyses" styleClass="section-title" />
+            <Label fx:id="infoLabel" styleClass="hint" text="Loading your analysis history..." />
+            
+            <TableView fx:id="historyTable" prefHeight="400">
+                <columns>
+                    <TableColumn text="Match Score" prefWidth="120" fx:id="scoreColumn" />
+                    <TableColumn text="Confidence" prefWidth="100" fx:id="confidenceColumn" />
+                    <TableColumn text="Matched Skills" prefWidth="200" fx:id="matchedColumn" />
+                    <TableColumn text="Missing Skills" prefWidth="200" fx:id="missingColumn" />
+                    <TableColumn text="Date" prefWidth="150" fx:id="dateColumn" />
+                </columns>
+            </TableView>
+            
+            <HBox spacing="12" alignment="CENTER_LEFT">
+                <Label fx:id="countLabel" styleClass="hint" HBox.hgrow="ALWAYS" />
+                <Button text="Refresh" onAction="#onRefresh" styleClass="secondary" />
+            </HBox>
+            
+            <padding>
+                <Insets top="16" right="16" bottom="16" left="16" />
+            </padding>
+        </VBox>
+    </center>
+    <padding>
+        <Insets top="16" right="16" bottom="16" left="16" />
+    </padding>
+</BorderPane>
