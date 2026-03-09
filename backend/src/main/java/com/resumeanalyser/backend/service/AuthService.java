@@ -16,14 +16,17 @@ public class AuthService {
     }
 
     public User login(String email, String password) {
-        return userRepository.findByEmail(email)
-                .map(user -> {
-                    if (!user.getPasswordHash().equals(HashingUtils.sha256(password))) {
-                        throw new IllegalArgumentException("Invalid credentials");
-                    }
-                    return user;
-                })
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        java.util.Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        User user = userOptional.get();
+        if (!user.getPasswordHash().equals(HashingUtils.sha256(password))) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
+
+        return user;
     }
 
     public User register(String email, String password) {
@@ -43,18 +46,24 @@ public class AuthService {
     }
 
     public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        java.util.Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isEmpty()) {
+            throw new IllegalArgumentException("User not found");
+        }
+        return userOptional.get();
     }
 
     public User loginOrCreate(String email, String password) {
-        return userRepository.findByEmail(email)
-                .map(user -> {
-                    if (!user.getPasswordHash().equals(HashingUtils.sha256(password))) {
-                        throw new IllegalArgumentException("Invalid credentials");
-                    }
-                    return user;
-                })
-                .orElseGet(() -> register(email, password));
+        java.util.Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isEmpty()) {
+            return register(email, password);
+        }
+
+        User user = userOptional.get();
+        if (!user.getPasswordHash().equals(HashingUtils.sha256(password))) {
+            throw new IllegalArgumentException("Invalid credentials");
+        }
+
+        return user;
     }
 }

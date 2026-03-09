@@ -42,8 +42,8 @@ public class UploadController {
 
     private File resumeFile;
     private File jobFile;
-    private final List<File> compareResumes = new ArrayList<>();
-    private final ApiClient apiClient = new ApiClient("http://localhost:8081");
+    private final List<File> compareFiles = new ArrayList<>();
+    private final ApiClient api = new ApiClient("http://localhost:8081");
 
     @FXML
     public void initialize() {
@@ -59,9 +59,7 @@ public class UploadController {
 
     @FXML
     private void onSelectResume() {
-        FileChooser chooser = new FileChooser();
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Resume Files", "*.pdf", "*.docx"));
-        resumeFile = chooser.showOpenDialog(resumeLabel.getScene().getWindow());
+        resumeFile = chooseFile("Resume Files", "*.pdf", "*.docx", resumeLabel);
         if (resumeFile != null) {
             resumeLabel.setText(resumeFile.getName());
         }
@@ -69,9 +67,7 @@ public class UploadController {
 
     @FXML
     private void onSelectJobFile() {
-        FileChooser chooser = new FileChooser();
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Job Files", "*.pdf", "*.docx"));
-        jobFile = chooser.showOpenDialog(jobLabel.getScene().getWindow());
+        jobFile = chooseFile("Job Files", "*.pdf", "*.docx", jobLabel);
         if (jobFile != null) {
             jobLabel.setText(jobFile.getName());
         }
@@ -87,12 +83,19 @@ public class UploadController {
             statusLabel.setText("Add a job description or job file");
             return;
         }
+
         String jobText = jobTextArea.getText();
         AppState.setJobText(jobText);
+
         Task<String> task = new Task<>() {
             @Override
             protected String call() throws Exception {
-                return apiClient.startAnalysis(resumeFile, jobFile, jobText, AppState.getSession().getEmail(), AppState.getPassword());
+                return api.startAnalysis(
+                        resumeFile,
+                        jobFile,
+                        jobText,
+                        AppState.getSession().getEmail(),
+                        AppState.getPassword());
             }
         };
 
@@ -106,74 +109,55 @@ public class UploadController {
             ViewNavigator.navigate("/fxml/analyzing.fxml");
         });
 
-        task.setOnFailed(event -> {
-            String error = task.getException() != null ? task.getException().getMessage() : "Analysis request failed";
-            statusLabel.setText(error);
-        });
-
+        task.setOnFailed(event -> statusLabel.setText("Analysis request failed"));
         new Thread(task).start();
     }
 
     @FXML
     private void onAddComparisonResume() {
-        FileChooser chooser = new FileChooser();
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Resume Files", "*.pdf", "*.docx"));
-        File file = chooser.showOpenDialog(compareList.getScene().getWindow());
+        File file = chooseFile("Resume Files", "*.pdf", "*.docx", compareList);
         if (file != null) {
-            compareResumes.add(file);
+            compareFiles.add(file);
             compareList.getItems().add(file.getName());
         }
     }
 
     @FXML
     private void onRankResumes() {
-        if (compareResumes.isEmpty()) {
+        if (compareFiles.isEmpty()) {
             statusLabel.setText("Add resumes to compare");
             return;
         }
-        String jobText = jobTextArea.getText();
-        if (jobText == null || jobText.isBlank()) {
+        if (jobTextArea.getText() == null || jobTextArea.getText().isBlank()) {
             statusLabel.setText("Enter job description text");
             return;
         }
+
+        String jobText = jobTextArea.getText();
         Task<List<RankedResume>> task = new Task<>() {
             @Override
             protected List<RankedResume> call() throws Exception {
-                return apiClient.rankResumes(compareResumes, jobText, AppState.getSession().getEmail(), AppState.getPassword());
+                return api.rankResumes(compareFiles, jobText, AppState.getSession().getEmail(), AppState.getPassword());
             }
         };
 
         task.setOnSucceeded(event -> {
             List<RankedResume> results = task.getValue();
-            // Navigate to comparison screen
             try {
                 javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(
                         getClass().getResource("/fxml/comparison.fxml"));
                 javafx.scene.Parent root = loader.load();
 
                 ComparisonController controller = loader.getController();
-
-                List<java.util.Map<String, Object>> resultMaps = new java.util.ArrayList<>();
-                for (RankedResume resume : results) {
-                    java.util.Map<String, Object> map = new java.util.HashMap<>();
-                    map.put("filename", resume.getFilename());
-                    map.put("matchScore", resume.getMatchScore());
-                    map.put("confidence", resume.getConfidenceScore());
-                    map.put("matchedSkills", resume.getMatchedSkills());
-                    map.put("missingSkills", resume.getMissingSkills());
-                    resultMaps.add(map);
-                }
-                controller.setResults(resultMaps);
+                controller.setResults(toComparisonRows(results));
 
                 rootPane.getScene().setRoot(root);
-            } catch (Exception e) {
+            } catch (java.io.IOException ex) {
                 statusLabel.setText("Failed to load comparison screen");
-                e.printStackTrace();
             }
         });
 
         task.setOnFailed(event -> statusLabel.setText("Ranking failed"));
-
         new Thread(task).start();
     }
 
@@ -214,5 +198,25 @@ public class UploadController {
             event.setDropCompleted(success);
             event.consume();
         });
+    }
+
+    private File chooseFile(String description, String ext1, String ext2, javafx.scene.Node ownerNode) {
+        FileChooser chooser = new FileChooser();
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(description, ext1, ext2));
+        return chooser.showOpenDialog(ownerNode.getScene().getWindow());
+    }
+
+    private List<java.util.Map<String, Object>> toComparisonRows(List<RankedResume> results) {
+        List<java.util.Map<String, Object>> rows = new java.util.ArrayList<>();
+        for (RankedResume resume : results) {
+            java.util.Map<String, Object> row = new java.util.HashMap<>();
+            row.put("filename", resume.getFilename());
+            row.put("matchScore", resume.getMatchScore());
+            row.put("confidence", resume.getConfidenceScore());
+            row.put("matchedSkills", resume.getMatchedSkills());
+            row.put("missingSkills", resume.getMissingSkills());
+            rows.add(row);
+        }
+        return rows;
     }
 }

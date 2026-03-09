@@ -20,7 +20,7 @@ public class AnalyzingController {
     @FXML
     private Label statusLabel;
 
-    private final ApiClient apiClient = new ApiClient("http://localhost:8081");
+    private final ApiClient api = new ApiClient("http://localhost:8081");
     private Timeline poller;
 
     @FXML
@@ -42,21 +42,21 @@ public class AnalyzingController {
         Task<AnalysisResult> task = new Task<>() {
             @Override
             protected AnalysisResult call() throws Exception {
-                return apiClient.pollStatus(analysisId);
+                return api.pollStatus(analysisId);
             }
         };
 
         task.setOnSucceeded(event -> {
-            if (task.getValue() != null) {
-                AppState.setLastResult(task.getValue());
+            AnalysisResult result = task.getValue();
+            if (result != null) {
+                AppState.setLastResult(result);
                 poller.stop();
                 ViewNavigator.navigate("/fxml/results.fxml");
             }
         });
 
         task.setOnFailed(event -> {
-            String error = task.getException() != null ? task.getException().getMessage() : "Analysis failed";
-            statusLabel.setText(error);
+            statusLabel.setText("Analysis failed");
             poller.stop();
         });
 

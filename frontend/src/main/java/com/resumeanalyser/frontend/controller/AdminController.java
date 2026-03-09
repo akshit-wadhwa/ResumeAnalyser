@@ -18,22 +18,19 @@ public class AdminController {
     @FXML
     private Label avgLabel;
 
-    private final ApiClient apiClient = new ApiClient("http://localhost:8081");
+    private final ApiClient api = new ApiClient("http://localhost:8081");
 
     @FXML
     public void initialize() {
         Task<AdminSummary> task = new Task<>() {
             @Override
             protected AdminSummary call() throws Exception {
-                return apiClient.fetchAdminSummary();
+                return api.fetchAdminSummary();
             }
         };
 
         task.setOnSucceeded(event -> {
-            AdminSummary summary = task.getValue();
-            usersLabel.setText(String.valueOf(summary.getTotalUsers()));
-            analysesLabel.setText(String.valueOf(summary.getTotalAnalyses()));
-            avgLabel.setText(String.format("%.1f%%", summary.getAverageMatchScore()));
+            showSummary(task.getValue());
         });
 
         new Thread(task).start();
@@ -42,5 +39,11 @@ public class AdminController {
     @FXML
     private void onBack() {
         ViewNavigator.navigate("/fxml/upload.fxml");
+    }
+
+    private void showSummary(AdminSummary summary) {
+        usersLabel.setText(String.valueOf(summary.getTotalUsers()));
+        analysesLabel.setText(String.valueOf(summary.getTotalAnalyses()));
+        avgLabel.setText(String.format("%.1f%%", summary.getAverageMatchScore()));
     }
 }

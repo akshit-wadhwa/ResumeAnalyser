@@ -41,7 +41,7 @@ public class ResultsController {
     @FXML
     private BorderPane rootPane;
 
-    private final ApiClient apiClient = new ApiClient("http://localhost:8081");
+    private final ApiClient api = new ApiClient("http://localhost:8081");
 
     @FXML
     public void initialize() {
@@ -50,21 +50,30 @@ public class ResultsController {
             ViewNavigator.navigate("/fxml/upload.fxml");
             return;
         }
+        showResult(result);
+    }
+
+    private void showResult(AnalysisResult result) {
         FadeTransition fade = new FadeTransition(Duration.millis(600), rootPane);
         fade.setFromValue(0);
         fade.setToValue(1);
         fade.play();
+
         matchLabel.setText(String.format("%.1f%%", result.getMatchScore()));
         confidenceLabel.setText(String.format("%.1f%%", result.getConfidenceScore()));
         seniorityLabel.setText(result.getSeniority());
 
+        fillResultLists(result);
+
+        double matchProgressValue = result.getMatchScore() / 100.0;
+        animateProgress(matchProgressValue);
+    }
+
+    private void fillResultLists(AnalysisResult result) {
         populateSkillsContainer(matchedContainer, result.getMatchedSkills(), "No specific skills matched", "#10b981");
         populateSkillsContainer(missingContainer, result.getMissingSkills(), "No critical skills missing", "#ef4444");
         populateSkillsContainer(weaknessContainer, result.getWeaknesses(), "No significant weaknesses identified", "#f59e0b");
         populateSkillsContainer(recommendationContainer, result.getRecommendations(), "No recommendations at this time", "#8b5cf6");
-
-        double matchProgressValue = result.getMatchScore() / 100.0;
-        animateProgress(matchProgressValue);
     }
 
     private void populateSkillsContainer(VBox container, List<String> items, String emptyMessage, String accentColor) {
@@ -78,7 +87,7 @@ public class ResultsController {
         }
 
         for (String item : items) {
-            Label skillLabel = new Label("• " + item);
+            Label skillLabel = new Label("- " + item);
             skillLabel.setStyle(String.format(
                     "-fx-text-fill: #334155; -fx-padding: 6 8; -fx-background-color: white; "
                     + "-fx-border-radius: 4; -fx-background-radius: 4; "
@@ -102,15 +111,14 @@ public class ResultsController {
     private void onExportReport() {
         FileChooser chooser = new FileChooser();
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("PDF", "*.pdf"));
-        File target = chooser.showSaveDialog(matchLabel.getScene().getWindow());
-        if (target == null) {
+        File file = chooser.showSaveDialog(matchLabel.getScene().getWindow());
+        if (file == null) {
             return;
         }
         new Thread(() -> {
             try {
-                apiClient.downloadReport(AppState.getLastAnalysisId(), target);
-            } catch (Exception ex) {
-                // ignore
+                api.downloadReport(AppState.getLastAnalysisId(), file);
+            } catch (java.io.IOException | InterruptedException e) {
             }
         }).start();
     }

@@ -2,9 +2,9 @@ package com.resumeanalyser.backend.dto;
 
 public class AdminSummaryDto {
 
-    private long totalUsers;
-    private long totalAnalyses;
-    private double averageMatchScore;
+    private final long totalUsers;
+    private final long totalAnalyses;
+    private final double averageMatchScore;
 
     public AdminSummaryDto(long totalUsers, long totalAnalyses, double averageMatchScore) {
         this.totalUsers = totalUsers;

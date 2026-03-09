@@ -65,7 +65,6 @@ public class AnalysisService {
         String analysisId = UUID.randomUUID().toString();
         tracker.start(analysisId);
 
-        // Read file bytes immediately before async task starts (before Tomcat deletes temp files)
         byte[] resumeBytes = resumeFile.getBytes();
         byte[] jobBytes = jobFile != null ? jobFile.getBytes() : null;
         String resumeFilename = resumeFile.getOriginalFilename();
@@ -81,42 +80,32 @@ public class AnalysisService {
 
     private void runAnalysis(String analysisId, User user, String resumeFilename, byte[] resumeBytes,
             String jobFilename, byte[] jobBytes, String jobText) {
-        AnalysisState state = new AnalysisState(AnalysisStatus.RUNNING);
+        AnalysisState analysisState = new AnalysisState(AnalysisStatus.RUNNING);
         List<ProcessingStepDto> steps = new ArrayList<>();
         try {
-            steps.add(step("Parse resume", "RUNNING"));
+            steps.add(newStep("Parse resume", "RUNNING"));
             ParsingResult resumeResult = parsingService.parseDocument(resumeFilename, resumeBytes);
-            steps.add(step("Parse resume", "DONE"));
+            steps.add(newStep("Parse resume", "DONE"));
 
-            steps.add(step("Parse job", "RUNNING"));
-            String jobContent = jobText;
-            if ((jobContent == null || jobContent.isBlank()) && jobBytes != null) {
-                jobContent = parsingService.parseDocument(jobFilename, jobBytes).getText();
-            }
-            if (jobContent == null || jobContent.isBlank()) {
-                throw new IllegalArgumentException("Job description is required");
-            }
-            steps.add(step("Parse job", "DONE"));
+            String jobContent = readJobContent(jobText, jobFilename, jobBytes, steps);
 
             String cacheKey = HashingUtils.sha256(resumeResult.getText() + "|" + jobContent);
-            AnalysisResultDto cached = cacheService.get(cacheKey);
-            if (cached != null) {
-                cached.setAnalysisId(analysisId);
-                cached.setProcessingSteps(steps);
-                state.setStatus(AnalysisStatus.COMPLETED);
-                state.setResult(cached);
-                tracker.complete(analysisId, state);
+            AnalysisResultDto cachedResult = cacheService.get(cacheKey);
+            if (cachedResult != null) {
+                cachedResult.setAnalysisId(analysisId);
+                cachedResult.setProcessingSteps(steps);
+                completeSuccess(analysisId, analysisState, cachedResult);
                 return;
             }
 
-            steps.add(step("ML analysis", "RUNNING"));
-            MLClient.MLResponse ml = mlClient.analyze(resumeResult.getText(), jobContent);
-            steps.add(step("ML analysis", "DONE"));
+            steps.add(newStep("ML analysis", "RUNNING"));
+            MLClient.MLResponse mlResult = mlClient.analyze(resumeResult.getText(), jobContent);
+            steps.add(newStep("ML analysis", "DONE"));
 
-            steps.add(step("Store results", "RUNNING"));
+            steps.add(newStep("Store results", "RUNNING"));
             long resumeId = resumeRepository.save(buildResume(user, resumeFilename, resumeResult.getText()));
             long jobId = jobRepository.save(buildJob(user, jobContent));
-            AnalysisResult result = buildAnalysisResult(user, resumeId, jobId, ml);
+            AnalysisResult result = buildAnalysisResult(user, resumeId, jobId, mlResult);
 
             analysisResultRepository.save(
                     result,
@@ -126,20 +115,43 @@ public class AnalysisService {
                     jsonUtils.toJson(result.getRecommendations()),
                     jsonUtils.toJson(steps)
             );
-            steps.add(step("Store results", "DONE"));
+            steps.add(newStep("Store results", "DONE"));
 
-            AnalysisResultDto dto = toDto(analysisId, result, steps);
-            cacheService.put(cacheKey, dto);
+            AnalysisResultDto resultDto = toDto(analysisId, result, steps);
+            cacheService.put(cacheKey, resultDto);
 
-            state.setStatus(AnalysisStatus.COMPLETED);
-            state.setResult(dto);
-            tracker.complete(analysisId, state);
+            completeSuccess(analysisId, analysisState, resultDto);
         } catch (Exception ex) {
             logger.error("Analysis failed", ex);
-            state.setStatus(AnalysisStatus.FAILED);
-            state.setErrorMessage(ex.getMessage());
-            tracker.complete(analysisId, state);
+            completeFailure(analysisId, analysisState, ex);
         }
+    }
+
+    private String readJobContent(String jobText, String jobFilename, byte[] jobBytes, List<ProcessingStepDto> steps) throws Exception {
+        steps.add(newStep("Parse job", "RUNNING"));
+
+        String value = jobText;
+        if ((value == null || value.isBlank()) && jobBytes != null) {
+            value = parsingService.parseDocument(jobFilename, jobBytes).getText();
+        }
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException("Job description is required");
+        }
+
+        steps.add(newStep("Parse job", "DONE"));
+        return value;
+    }
+
+    private void completeSuccess(String analysisId, AnalysisState state, AnalysisResultDto result) {
+        state.setStatus(AnalysisStatus.COMPLETED);
+        state.setResult(result);
+        tracker.complete(analysisId, state);
+    }
+
+    private void completeFailure(String analysisId, AnalysisState state, Exception ex) {
+        state.setStatus(AnalysisStatus.FAILED);
+        state.setErrorMessage(ex.getMessage());
+        tracker.complete(analysisId, state);
     }
 
     private ResumeDocument buildResume(User user, String filename, String text) {
@@ -178,7 +190,7 @@ public class AnalysisService {
         return result;
     }
 
-    private ProcessingStepDto step(String name, String status) {
+    private ProcessingStepDto newStep(String name, String status) {
         return new ProcessingStepDto(name, status, LocalDateTime.now().toString());
     }
 
@@ -199,20 +211,22 @@ public class AnalysisService {
     }
 
     public List<AnalysisResultDto> getUserAnalysisHistory(long userId) {
-        List<AnalysisResult> results = analysisResultRepository.findByUserId(userId);
-        return results.stream().map(result -> {
-            AnalysisResultDto dto = new AnalysisResultDto();
-            dto.setMatchScore(result.getMatchScore());
-            dto.setConfidenceScore(result.getConfidenceScore());
-            dto.setMatchedSkills(result.getMatchedSkills());
-            dto.setMissingSkills(result.getMissingSkills());
-            dto.setWeaknesses(result.getWeaknesses());
-            dto.setRecommendations(result.getRecommendations());
-            dto.setExperienceYears(result.getExperienceYears());
-            dto.setEducation(result.getEducation());
-            dto.setSeniority(result.getSeniority());
-            dto.setCreatedAt(result.getCreatedAt());
-            return dto;
-        }).toList();
+        List<AnalysisResult> rows = analysisResultRepository.findByUserId(userId);
+        List<AnalysisResultDto> list = new ArrayList<>();
+        for (AnalysisResult row : rows) {
+            AnalysisResultDto resultDto = new AnalysisResultDto();
+            resultDto.setMatchScore(row.getMatchScore());
+            resultDto.setConfidenceScore(row.getConfidenceScore());
+            resultDto.setMatchedSkills(row.getMatchedSkills());
+            resultDto.setMissingSkills(row.getMissingSkills());
+            resultDto.setWeaknesses(row.getWeaknesses());
+            resultDto.setRecommendations(row.getRecommendations());
+            resultDto.setExperienceYears(row.getExperienceYears());
+            resultDto.setEducation(row.getEducation());
+            resultDto.setSeniority(row.getSeniority());
+            resultDto.setCreatedAt(row.getCreatedAt());
+            list.add(resultDto);
+        }
+        return list;
     }
 }

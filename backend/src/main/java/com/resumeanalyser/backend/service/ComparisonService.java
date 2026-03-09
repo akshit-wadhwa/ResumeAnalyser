@@ -52,26 +52,26 @@ public class ComparisonService {
         job.setCreatedAt(LocalDateTime.now());
         long jobId = jobRepository.save(job);
 
-        List<String> resumeIds = new ArrayList<>();
-        List<RankedResumeDto> ranking = new ArrayList<>();
+        List<String> ids = new ArrayList<>();
+        List<RankedResumeDto> rankedList = new ArrayList<>();
 
         for (MultipartFile file : resumes) {
-            ParsingResult result = parsingService.parseDocument(file);
+            ParsingResult parsed = parsingService.parseDocument(file);
             ResumeDocument resume = new ResumeDocument();
             resume.setUserId(user.getId());
             resume.setFilename(file.getOriginalFilename());
-            resume.setContentText(result.getText());
+            resume.setContentText(parsed.getText());
             resume.setCreatedAt(LocalDateTime.now());
             long resumeId = resumeRepository.save(resume);
-            resumeIds.add(String.valueOf(resumeId));
+            ids.add(String.valueOf(resumeId));
 
-            MLClient.MLResponse response = mlClient.analyze(result.getText(), jobText);
-            ranking.add(new RankedResumeDto(file.getOriginalFilename(), response.match_score,
-                    response.confidence_score, response.matched_skills, response.missing_skills));
+            MLClient.MLResponse mlResult = mlClient.analyze(parsed.getText(), jobText);
+            rankedList.add(new RankedResumeDto(file.getOriginalFilename(), mlResult.match_score,
+                    mlResult.confidence_score, mlResult.matched_skills, mlResult.missing_skills));
         }
 
-        ranking.sort(Comparator.comparingDouble(RankedResumeDto::getMatchScore).reversed());
-        comparisonRepository.save(user.getId(), jobId, jsonUtils.toJson(resumeIds), jsonUtils.toJson(ranking));
-        return new ComparisonResponse(ranking);
+        rankedList.sort(Comparator.comparingDouble(RankedResumeDto::getMatchScore).reversed());
+        comparisonRepository.save(user.getId(), jobId, jsonUtils.toJson(ids), jsonUtils.toJson(rankedList));
+        return new ComparisonResponse(rankedList);
     }
 }

@@ -17,7 +17,7 @@
                 <Button text="← Back to Dashboard" onAction="#onBackToDashboard" styleClass="secondary" />
             </HBox>
             
-            <Label fx:id="jobTitleLabel" text="Analyzing resumes for job requirements" styleClass="section-title" />
+            <Label text="Analyzing resumes for job requirements" styleClass="section-title" />
         </VBox>
     </top>
     
@@ -31,7 +31,7 @@
     
     <bottom>
         <HBox spacing="12" styleClass="panel" BorderPane.alignment="CENTER" style="-fx-padding: 16;">
-            <Button text="⟲ New Comparison" onAction="#onBackToDashboard" styleClass="accent" HBox.hgrow="ALWAYS" />
+            <Button text="New Comparison" onAction="#onBackToDashboard" styleClass="accent" HBox.hgrow="ALWAYS" />
         </HBox>
     </bottom>
     

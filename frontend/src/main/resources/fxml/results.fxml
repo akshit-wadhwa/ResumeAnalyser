@@ -41,37 +41,33 @@
     <center>
         <HBox spacing="16" BorderPane.alignment="CENTER">
             <VBox spacing="14" styleClass="panel" HBox.hgrow="ALWAYS">
-                <Label text="✓ Matched Skills" styleClass="section-title" />
+                <Label text="Matched Skills" styleClass="section-title" />
                 <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 6; -fx-min-height: 250; -fx-max-height: 250;">
                     <VBox fx:id="matchedContainer" spacing="6" style="-fx-padding: 8; -fx-background-color: #f8fafc;">
-                        <!-- Skills will be added dynamically -->
                     </VBox>
                 </ScrollPane>
             </VBox>
             
             <VBox spacing="14" styleClass="panel" HBox.hgrow="ALWAYS">
-                <Label text="✗ Missing Skills" styleClass="section-title" />
+                <Label text="Missing Skills" styleClass="section-title" />
                 <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 6; -fx-min-height: 250; -fx-max-height: 250;">
                     <VBox fx:id="missingContainer" spacing="6" style="-fx-padding: 8; -fx-background-color: #f8fafc;">
-                        <!-- Skills will be added dynamically -->
                     </VBox>
                 </ScrollPane>
             </VBox>
             
             <VBox spacing="14" styleClass="panel" HBox.hgrow="ALWAYS">
-                <Label text="⚠ Areas to Improve" styleClass="section-title" />
+                <Label text="Areas to Improve" styleClass="section-title" />
                 <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 6; -fx-min-height: 250; -fx-max-height: 250;">
                     <VBox fx:id="weaknessContainer" spacing="6" style="-fx-padding: 8; -fx-background-color: #f8fafc;">
-                        <!-- Weaknesses will be added dynamically -->
                     </VBox>
                 </ScrollPane>
             </VBox>
             
             <VBox spacing="14" styleClass="panel" HBox.hgrow="ALWAYS">
-                <Label text="💡 Recommendations" styleClass="section-title" />
+                <Label text="Recommendations" styleClass="section-title" />
                 <ScrollPane fitToWidth="true" style="-fx-background: transparent; -fx-border-color: #e2e8f0; -fx-border-width: 1; -fx-border-radius: 6; -fx-min-height: 250; -fx-max-height: 250;">
                     <VBox fx:id="recommendationContainer" spacing="6" style="-fx-padding: 8; -fx-background-color: #f8fafc;">
-                        <!-- Recommendations will be added dynamically -->
                     </VBox>
                 </ScrollPane>
             </VBox>
@@ -80,8 +76,8 @@
     
     <bottom>
         <HBox spacing="12" styleClass="panel" BorderPane.alignment="CENTER" style="-fx-padding: 16;">
-            <Button text="📥 Export PDF Report" onAction="#onExportReport" styleClass="primary" HBox.hgrow="ALWAYS" />
-            <Button text="⟲ New Analysis" onAction="#onBackToUpload" styleClass="accent" />
+            <Button text="Export PDF Report" onAction="#onExportReport" styleClass="primary" HBox.hgrow="ALWAYS" />
+            <Button text="New Analysis" onAction="#onBackToUpload" styleClass="accent" />
         </HBox>
     </bottom>
     

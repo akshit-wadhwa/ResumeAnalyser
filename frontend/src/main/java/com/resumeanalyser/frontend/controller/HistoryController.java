@@ -40,7 +40,7 @@ public class HistoryController {
     @FXML
     private BorderPane rootPane;
 
-    private final ApiClient apiClient = new ApiClient("http://localhost:8081");
+    private final ApiClient api = new ApiClient("http://localhost:8081");
 
     @FXML
     public void initialize() {
@@ -48,7 +48,7 @@ public class HistoryController {
         fade.setFromValue(0);
         fade.setToValue(1);
         fade.play();
-
+        setupColumns();
         loadHistory();
     }
 
@@ -61,7 +61,7 @@ public class HistoryController {
         Task<List<AnalysisResult>> task = new Task<>() {
             @Override
             protected List<AnalysisResult> call() throws Exception {
-                return apiClient.getHistory(AppState.getSession().getEmail(), AppState.getPassword());
+                return api.getHistory(AppState.getSession().getEmail(), AppState.getPassword());
             }
         };
 
@@ -73,33 +73,9 @@ public class HistoryController {
             } else {
                 infoLabel.setText("");
                 countLabel.setText("Total: " + history.size() + " analyses");
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
-
                 for (AnalysisResult item : history) {
-                    String matched = item.getMatchedSkills() != null && !item.getMatchedSkills().isEmpty()
-                            ? String.join(", ", item.getMatchedSkills().subList(0, Math.min(3, item.getMatchedSkills().size())))
-                            : "None";
-                    String missing = item.getMissingSkills() != null && !item.getMissingSkills().isEmpty()
-                            ? String.join(", ", item.getMissingSkills().subList(0, Math.min(3, item.getMissingSkills().size())))
-                            : "None";
-                    String dateStr = item.getCreatedAt() != null
-                            ? item.getCreatedAt().format(formatter)
-                            : "Unknown";
-
-                    historyTable.getItems().add(Map.of(
-                            "score", String.format("%.1f%%", item.getMatchScore()),
-                            "confidence", String.format("%.1f%%", item.getConfidenceScore()),
-                            "matched", matched,
-                            "missing", missing,
-                            "date", dateStr
-                    ));
+                    historyTable.getItems().add(toRow(item));
                 }
-
-                scoreColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("score")));
-                confidenceColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("confidence")));
-                matchedColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("matched")));
-                missingColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("missing")));
-                dateColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("date")));
             }
         });
 
@@ -108,7 +84,6 @@ public class HistoryController {
             String errorMsg = "Failed to load history";
             if (exception != null) {
                 errorMsg += ": " + exception.getMessage();
-                exception.printStackTrace();
             }
             infoLabel.setText(errorMsg);
         });
@@ -125,5 +100,43 @@ public class HistoryController {
     @FXML
     private void onBack() {
         ViewNavigator.navigate("/fxml/upload.fxml");
+    }
+
+    private void setupColumns() {
+        scoreColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("score")));
+        confidenceColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("confidence")));
+        matchedColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("matched")));
+        missingColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("missing")));
+        dateColumn.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty((String) data.getValue().get("date")));
+    }
+
+    private Map<String, Object> toRow(AnalysisResult item) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy HH:mm");
+        String matched = topSkills(item.getMatchedSkills());
+        String missing = topSkills(item.getMissingSkills());
+        String dateStr = item.getCreatedAt() != null ? item.getCreatedAt().format(formatter) : "Unknown";
+
+        Map<String, Object> row = new java.util.HashMap<>();
+        row.put("score", String.format("%.1f%%", item.getMatchScore()));
+        row.put("confidence", String.format("%.1f%%", item.getConfidenceScore()));
+        row.put("matched", matched);
+        row.put("missing", missing);
+        row.put("date", dateStr);
+        return row;
+    }
+
+    private String topSkills(List<String> items) {
+        if (items == null || items.isEmpty()) {
+            return "None";
+        }
+        int limit = Math.min(3, items.size());
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < limit; i++) {
+            if (i > 0) {
+                text.append(", ");
+            }
+            text.append(items.get(i));
+        }
+        return text.toString();
     }
 }

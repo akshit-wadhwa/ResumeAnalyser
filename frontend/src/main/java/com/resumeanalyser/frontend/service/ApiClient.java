@@ -7,6 +7,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -29,7 +30,9 @@ public class ApiClient {
     }
 
     public UserSession login(String email, String password) throws IOException, InterruptedException {
-        Map<String, String> payload = Map.of("email", email, "password", password);
+        Map<String, String> payload = new HashMap<>();
+        payload.put("email", email);
+        payload.put("password", password);
         String body = mapper.writeValueAsString(payload);
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/auth/login"))
@@ -44,11 +47,10 @@ public class ApiClient {
     }
 
     public UserSession register(String email, String password, String fullName) throws IOException, InterruptedException {
-        Map<String, String> payload = Map.of(
-                "email", email,
-                "password", password,
-                "fullName", fullName
-        );
+        Map<String, String> payload = new HashMap<>();
+        payload.put("email", email);
+        payload.put("password", password);
+        payload.put("fullName", fullName);
         String body = mapper.writeValueAsString(payload);
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/auth/register"))
@@ -79,7 +81,6 @@ public class ApiClient {
                 .header("Content-Type", "multipart/form-data; boundary=" + builder.getBoundary())
                 .POST(builder.build())
                 .build();
-
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) {
             throw new IOException("Analysis start failed: " + response.body());
@@ -114,7 +115,6 @@ public class ApiClient {
             throw new IOException(error);
         }
         if (!"COMPLETED".equals(result.get("status"))) {
-
             return null;
         }
         String payload = mapper.writeValueAsString(result.get("result"));
@@ -135,7 +135,6 @@ public class ApiClient {
                 .header("Content-Type", "multipart/form-data; boundary=" + builder.getBoundary())
                 .POST(builder.build())
                 .build();
-
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         Map<?, ?> result = mapper.readValue(response.body(), Map.class);
         String payload = mapper.writeValueAsString(result.get("ranking"));

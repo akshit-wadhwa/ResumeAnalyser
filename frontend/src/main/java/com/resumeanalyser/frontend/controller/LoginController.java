@@ -26,7 +26,7 @@ public class LoginController {
     @FXML
     private StackPane rootPane;
 
-    private final ApiClient apiClient = new ApiClient("http://localhost:8081");
+    private final ApiClient api = new ApiClient("http://localhost:8081");
 
     @FXML
     public void initialize() {
@@ -41,7 +41,7 @@ public class LoginController {
     private void onLogin() {
         String email = emailField.getText();
         String password = passwordField.getText();
-        if (email == null || email.isBlank() || password == null || password.isBlank()) {
+        if (!isValidInput(email, password)) {
             statusLabel.setText("Enter email and password");
             return;
         }
@@ -50,24 +50,31 @@ public class LoginController {
         Task<UserSession> task = new Task<>() {
             @Override
             protected UserSession call() throws Exception {
-                UserSession session = apiClient.login(email, password);
+                UserSession session = api.login(email, password);
                 session.setEmail(email);
                 return session;
             }
         };
 
         task.setOnSucceeded(event -> {
-            AppState.setSession(task.getValue());
-            AppState.setPassword(password);
-            ViewNavigator.navigate("/fxml/upload.fxml");
+            onLoginSuccess(task.getValue(), password);
         });
 
         task.setOnFailed(event -> {
-            String error = task.getException() != null ? task.getException().getMessage() : "Login failed";
-            statusLabel.setText(error.contains("Login failed") ? "Invalid email or password" : error);
+            statusLabel.setText("Invalid email or password");
         });
 
         new Thread(task).start();
+    }
+
+    private boolean isValidInput(String email, String password) {
+        return email != null && !email.isBlank() && !password.isBlank();
+    }
+
+    private void onLoginSuccess(UserSession session, String password) {
+        AppState.setSession(session);
+        AppState.setPassword(password);
+        ViewNavigator.navigate("/fxml/upload.fxml");
     }
 
     @FXML

@@ -15,28 +15,35 @@ public class MultipartBodyBuilder {
     private final List<byte[]> parts = new ArrayList<>();
 
     public void addText(String name, String value) {
-        String part = "--" + boundary + "\r\n"
-                + "Content-Disposition: form-data; name=\"" + name + "\"\r\n\r\n"
-                + value + "\r\n";
-        parts.add(part.getBytes(StandardCharsets.UTF_8));
+        StringBuilder part = new StringBuilder();
+        part.append("--").append(boundary).append("\r\n");
+        part.append("Content-Disposition: form-data; name=\"").append(name).append("\"\r\n\r\n");
+        part.append(value).append("\r\n");
+        parts.add(toBytes(part.toString()));
     }
 
     public void addFile(String name, File file) throws IOException {
-        String header = "--" + boundary + "\r\n"
-                + "Content-Disposition: form-data; name=\"" + name + "\"; filename=\"" + file.getName() + "\"\r\n"
-                + "Content-Type: application/octet-stream\r\n\r\n";
-        parts.add(header.getBytes(StandardCharsets.UTF_8));
+        StringBuilder header = new StringBuilder();
+        header.append("--").append(boundary).append("\r\n");
+        header.append("Content-Disposition: form-data; name=\"").append(name)
+                .append("\"; filename=\"").append(file.getName()).append("\"\r\n");
+        header.append("Content-Type: application/octet-stream\r\n\r\n");
+        parts.add(toBytes(header.toString()));
         parts.add(Files.readAllBytes(file.toPath()));
-        parts.add("\r\n".getBytes(StandardCharsets.UTF_8));
+        parts.add(toBytes("\r\n"));
     }
 
     public HttpRequest.BodyPublisher build() {
-        String end = "--" + boundary + "--\r\n";
-        parts.add(end.getBytes(StandardCharsets.UTF_8));
-        return HttpRequest.BodyPublishers.ofByteArrays(parts);
+        List<byte[]> allParts = new ArrayList<>(parts);
+        allParts.add(toBytes("--" + boundary + "--\r\n"));
+        return HttpRequest.BodyPublishers.ofByteArrays(allParts);
     }
 
     public String getBoundary() {
         return boundary;
+    }
+
+    private byte[] toBytes(String value) {
+        return value.getBytes(StandardCharsets.UTF_8);
     }
 }

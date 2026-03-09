@@ -13,13 +13,11 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+@SuppressWarnings("unused")
 public class ComparisonController {
 
     @FXML
     private BorderPane rootPane;
-
-    @FXML
-    private Label jobTitleLabel;
 
     @FXML
     private VBox comparisonContainer;
@@ -27,7 +25,6 @@ public class ComparisonController {
     private List<Map<String, Object>> results;
 
     public void initialize() {
-        // Will be populated via setResults method
     }
 
     public void setResults(List<Map<String, Object>> results) {
@@ -45,7 +42,6 @@ public class ComparisonController {
             return;
         }
 
-        // Sort by match score descending
         results.sort((a, b) -> {
             Double scoreA = (Double) a.get("matchScore");
             Double scoreB = (Double) b.get("matchScore");
@@ -65,7 +61,6 @@ public class ComparisonController {
         card.getStyleClass().add("panel");
         card.setPadding(new Insets(20));
 
-        // Rank badge and filename
         HBox header = new HBox(12);
         header.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
@@ -83,7 +78,6 @@ public class ComparisonController {
 
         header.getChildren().addAll(rankLabel, filenameLabel, scoreLabel);
 
-        // Score breakdown
         HBox metrics = new HBox(20);
         metrics.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
 
@@ -91,7 +85,6 @@ public class ComparisonController {
         metrics.getChildren().add(createMetricBox("Confidence",
                 (Double) result.get("confidence"), "#f59e0b"));
 
-        // Matched skills indicator
         @SuppressWarnings("unchecked")
         List<String> matchedSkills = (List<String>) result.get("matchedSkills");
         int matchedCount = matchedSkills != null ? matchedSkills.size() : 0;
@@ -100,21 +93,20 @@ public class ComparisonController {
         List<String> missingSkills = (List<String>) result.get("missingSkills");
         int missingCount = missingSkills != null ? missingSkills.size() : 0;
 
-        Label skillsLabel = new Label(String.format("✓ %d skills matched  •  ✗ %d missing", matchedCount, missingCount));
+        Label skillsLabel = new Label(String.format("%d skills matched, %d missing", matchedCount, missingCount));
         skillsLabel.setStyle("-fx-font-size: 13; -fx-text-fill: #64748b;");
 
         card.getChildren().addAll(header, metrics, skillsLabel);
 
-        // Add border color based on rank
         String borderColor = switch (rank) {
             case 1 ->
-                "#10b981"; // Green for top candidate
+                "#10b981";
             case 2 ->
-                "#2563eb"; // Blue for second
+                "#2563eb";
             case 3 ->
-                "#f59e0b"; // Orange for third
+                "#f59e0b";
             default ->
-                "#cbd5e1"; // Gray for others
+                "#cbd5e1";
         };
         card.setStyle(card.getStyle() + "; -fx-border-color: " + borderColor + "; -fx-border-width: 2;");
 
@@ -150,15 +142,15 @@ public class ComparisonController {
             return "#64748b";
         }
         if (score >= 80) {
-            return "#10b981"; // Green
-
-                }if (score >= 60) {
-            return "#2563eb"; // Blue
-
-                }if (score >= 40) {
-            return "#f59e0b"; // Orange
-
-                }return "#ef4444"; // Red
+            return "#10b981";
+        }
+        if (score >= 60) {
+            return "#2563eb";
+        }
+        if (score >= 40) {
+            return "#f59e0b";
+        }
+        return "#ef4444";
     }
 
     @FXML
@@ -168,8 +160,7 @@ public class ComparisonController {
                     getClass().getResource("/fxml/upload.fxml"));
             javafx.scene.Parent root = loader.load();
             rootPane.getScene().setRoot(root);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (java.io.IOException e) {
         }
     }
 }

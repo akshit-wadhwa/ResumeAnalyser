@@ -74,7 +74,6 @@ public class AnalysisResultRepository {
             result.setConfidenceScore(rs.getDouble("confidence_score"));
             result.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
 
-            // Parse JSON fields
             try {
                 String matchedJson = rs.getString("matched_skills");
                 if (matchedJson != null) {
@@ -99,8 +98,7 @@ public class AnalysisResultRepository {
                     result.setRecommendations(objectMapper.readValue(recommendationsJson,
                             objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)));
                 }
-            } catch (Exception e) {
-                // If JSON parsing fails, just leave fields empty
+            } catch (java.io.IOException e) {
             }
 
             return result;

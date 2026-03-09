@@ -47,7 +47,6 @@ public class AnalysisController {
             @RequestParam("userPassword") String userPassword
     ) {
         try {
-            // Authenticate user - no auto-creation
             User user = authService.login(userEmail, userPassword);
             String analysisId = analysisService.startAnalysis(user, resume, jobFile, jobText);
             return ResponseEntity.ok(new AnalysisStartResponse(analysisId));
@@ -64,8 +63,16 @@ public class AnalysisController {
         if (state == null) {
             return ResponseEntity.notFound().build();
         }
-        AnalysisResultDto result = state.getStatus() == AnalysisStatus.COMPLETED ? state.getResult() : null;
-        return ResponseEntity.ok(new AnalysisStatusResponse(state.getStatus().name(), result, state.getErrorMessage()));
+        AnalysisResultDto result = null;
+        if (state.getStatus() == AnalysisStatus.COMPLETED) {
+            result = state.getResult();
+        }
+        AnalysisStatusResponse response = new AnalysisStatusResponse(
+                state.getStatus().name(),
+                result,
+                state.getErrorMessage()
+        );
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{analysisId}/report")

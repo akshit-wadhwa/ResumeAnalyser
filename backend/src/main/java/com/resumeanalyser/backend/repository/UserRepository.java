@@ -21,11 +21,19 @@ public class UserRepository {
     }
 
     public Optional<User> findByEmail(String email) {
-        return jdbcTemplate.query("SELECT * FROM users WHERE email = ?", new UserRowMapper(), email).stream().findFirst();
+        java.util.List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE email = ?", new UserRowMapper(), email);
+        if (users.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(users.get(0));
     }
 
     public Optional<User> findById(long id) {
-        return jdbcTemplate.query("SELECT * FROM users WHERE id = ?", new UserRowMapper(), id).stream().findFirst();
+        java.util.List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE id = ?", new UserRowMapper(), id);
+        if (users.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(users.get(0));
     }
 
     public long save(User user) {

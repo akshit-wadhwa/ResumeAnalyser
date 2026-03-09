@@ -30,7 +30,7 @@ public class RegisterController {
     @FXML
     private StackPane rootPane;
 
-    private final ApiClient apiClient = new ApiClient("http://localhost:8081");
+    private final ApiClient api = new ApiClient("http://localhost:8081");
 
     @FXML
     public void initialize() {
@@ -48,24 +48,9 @@ public class RegisterController {
         String password = passwordField.getText();
         String confirmPassword = confirmPasswordField.getText();
 
-        if (email == null || email.isBlank()) {
-            statusLabel.setText("Email is required");
-            return;
-        }
-        if (!email.contains("@")) {
-            statusLabel.setText("Please enter a valid email");
-            return;
-        }
-        if (fullName == null || fullName.isBlank()) {
-            statusLabel.setText("Full name is required");
-            return;
-        }
-        if (password == null || password.length() < 6) {
-            statusLabel.setText("Password must be at least 6 characters");
-            return;
-        }
-        if (!password.equals(confirmPassword)) {
-            statusLabel.setText("Passwords do not match");
+        String error = validateInput(email, fullName, password, confirmPassword);
+        if (error != null) {
+            statusLabel.setText(error);
             return;
         }
 
@@ -73,24 +58,46 @@ public class RegisterController {
         Task<UserSession> task = new Task<>() {
             @Override
             protected UserSession call() throws Exception {
-                UserSession session = apiClient.register(email, password, fullName);
+                UserSession session = api.register(email, password, fullName);
                 session.setEmail(email);
                 return session;
             }
         };
 
         task.setOnSucceeded(event -> {
-            AppState.setSession(task.getValue());
-            AppState.setPassword(password);
-            ViewNavigator.navigate("/fxml/upload.fxml");
+            onRegisterSuccess(task.getValue(), password);
         });
 
         task.setOnFailed(event -> {
-            String error = task.getException() != null ? task.getException().getMessage() : "Registration failed";
-            statusLabel.setText(error);
+            statusLabel.setText("Registration failed");
         });
 
         new Thread(task).start();
+    }
+
+    private String validateInput(String email, String fullName, String password, String confirmPassword) {
+        if (email == null || email.isBlank()) {
+            return "Email is required";
+        }
+        if (!email.contains("@")) {
+            return "Please enter a valid email";
+        }
+        if (fullName == null || fullName.isBlank()) {
+            return "Full name is required";
+        }
+        if (password == null || password.length() < 6) {
+            return "Password must be at least 6 characters";
+        }
+        if (!password.equals(confirmPassword)) {
+            return "Passwords do not match";
+        }
+        return null;
+    }
+
+    private void onRegisterSuccess(UserSession session, String password) {
+        AppState.setSession(session);
+        AppState.setPassword(password);
+        ViewNavigator.navigate("/fxml/upload.fxml");
     }
 
     @FXML

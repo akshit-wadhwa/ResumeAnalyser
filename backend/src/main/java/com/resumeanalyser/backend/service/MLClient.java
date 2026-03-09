@@ -1,32 +1,36 @@
 package com.resumeanalyser.backend.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Map;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class MLClient {
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
-    private final String endpoint;
+    private final String url;
 
     public MLClient(RestTemplate restTemplate, ObjectMapper objectMapper,
             @Value("${ml.endpoint}") String endpoint) {
         this.restTemplate = restTemplate;
         this.objectMapper = objectMapper;
-        this.endpoint = endpoint;
+        this.url = endpoint;
     }
 
     public MLResponse analyze(String resumeText, String jobText) {
-        Map<String, String> payload = Map.of("resume_text", resumeText, "job_text", jobText);
-        String response = restTemplate.postForObject(endpoint, payload, String.class);
+        Map<String, String> payload = new HashMap<>();
+        payload.put("resume_text", resumeText);
+        payload.put("job_text", jobText);
+        String json = restTemplate.postForObject(url, payload, String.class);
         try {
-            return objectMapper.readValue(response, MLResponse.class);
-        } catch (Exception ex) {
+            return objectMapper.readValue(json, MLResponse.class);
+        } catch (java.io.IOException ex) {
             throw new IllegalStateException("ML response parsing failed", ex);
         }
     }

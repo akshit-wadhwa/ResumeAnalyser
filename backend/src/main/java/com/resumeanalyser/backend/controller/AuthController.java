@@ -31,7 +31,8 @@ public class AuthController {
         try {
             User user = authService.login(request.getEmail(), request.getPassword());
             String token = HashingUtils.sha256(user.getEmail() + ":" + System.currentTimeMillis());
-            return ResponseEntity.ok(new LoginResponse(user.getId(), user.getRole(), token));
+            LoginResponse response = new LoginResponse(user.getId(), user.getRole(), token);
+            return ResponseEntity.ok(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
@@ -42,7 +43,8 @@ public class AuthController {
         try {
             User user = authService.register(request.getEmail(), request.getPassword());
             String token = HashingUtils.sha256(user.getEmail() + ":" + System.currentTimeMillis());
-            return ResponseEntity.status(HttpStatus.CREATED).body(new LoginResponse(user.getId(), user.getRole(), token));
+            LoginResponse response = new LoginResponse(user.getId(), user.getRole(), token);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
